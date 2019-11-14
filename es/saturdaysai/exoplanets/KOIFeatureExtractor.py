@@ -16,9 +16,11 @@ class KOIFeatureExtractor:
 		self.sourceFileName = sourceFileName
  	
 	def extractFeatures(self, destinationFileName):
-		print("Extracting features in dataset ", self.__sourceFileName__, " to file ", destinationFileName)
+		print("Extracting features in dataset ", self.sourceFileName, " to file ", destinationFileName)
 		self.deleteFile(destinationFileName) # Delete destination file to be able to recreate it
 		with open(destinationFileName,'a+') as destinationFile:
+			# Header row for generated file
+			destinationFile.write("koi_id, koi_period, koi_is_planet\n") 
 			with open(self.sourceFileName,'r') as sourceFile:
 				# Skip header row
 				next(sourceFile) 
