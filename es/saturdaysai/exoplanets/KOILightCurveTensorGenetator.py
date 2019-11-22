@@ -3,10 +3,11 @@ from lightKurveApi.lightKurveClient import LightKurveClient
 
 class KOILightCurveTensorGenerator:
 
-	DEFAULT_GLOBAL_LEN = 2000 	
+	DEFAULT_GLOBAL_LEN = 2001 	
 	DEFAULT_LOCAL_LEN = 201
+	DEFAULT_LOCAL_VIEW_WIDTH = 4 
 	
-	def __init__(self, sourceFileName, global_tensor_len = DEFAULT_GLOBAL_LEN, local_tensor_len = DEFAULT_LOCAL_LEN):
+	def __init__(self, sourceFileName, global_tensor_len = DEFAULT_GLOBAL_LEN, local_tensor_len = DEFAULT_LOCAL_LEN, local_view_witdh = DEFAULT_LOCAL_VIEW_WIDTH):
 		self.df = pd.read_csv(sourceFileName)
 		self.global_tensor_len = global_tensor_len
 		self.local_tensor_len = local_tensor_len
@@ -22,13 +23,14 @@ class KOILightCurveTensorGenerator:
 			duration = row.koi_duration
 			period = row.koi_period
 			foldedLightCurveDataFrames = lkClient.getKOILightKurve(koi_id, mission = mission, fold_period = period)
-			printf(f"Obtained {len(lightCurveDataFrames)} folds. Creating local views:")
+			print(f"Obtained {len(foldedLightCurveDataFrames)} folds. Creating local views:")
 			for flc in foldedLightCurveDataFrames:
 				llc = createLocalView(flc, duration, period)	
 				print(f"Generated local view with {len(llc)} items for period with {len(flc)} items")
 				
 	def createLocalView(self, flc, duration, period):
-		semiPeriod = duration/period
+		# With of period in folded, multiplied by DEFAULT_LOCAL_VIEW_WIDTH to also include points close to transit init
+		semiPeriod = duration /(period * 2) * local_view_witdh
 		return flcDataFrame.loc[(flcDataFrame['time'] >= -semiPeriod) & (flc['time'] <= semiPeriod)]
 	
 
