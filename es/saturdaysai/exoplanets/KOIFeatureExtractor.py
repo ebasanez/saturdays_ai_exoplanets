@@ -5,6 +5,7 @@ import re
 class KOIFeatureExtractor:	
 	
 	COLUMN_ID = 0
+	COLUMN_NAME = 1
 	COLUMN_LABEL = 3
 	COLUMN_PERIOD = 10
 	COLUMN_T0 = 13
@@ -22,7 +23,7 @@ class KOIFeatureExtractor:
 		self.deleteFile(destinationFileName) # Delete destination file to be able to recreate it
 		with open(destinationFileName,'a+') as destinationFile:
 			# Header row for generated file
-			destinationFile.write("mission, koi_id, koi_time0bk, koi_period, koi_duration, koi_is_planet\n") 
+			destinationFile.write("mission,koi_id,koi_name,koi_time0bk,koi_period,koi_duration,koi_is_planet\n") 
 			with open(self.sourceFileName,'r') as sourceFile:
 				# Skip header row
 				next(sourceFile) 
@@ -30,13 +31,14 @@ class KOIFeatureExtractor:
 				for line in sourceFile:
 					lineItems = line.split(',')
 					koiId = lineItems[self.COLUMN_ID]
+					koiName = lineItems[self.COLUMN_NAME]
 					koiLabel = lineItems[self.COLUMN_LABEL]
 					koiPeriod = float(lineItems[self.COLUMN_PERIOD])
 					koiT0 = float(lineItems[self.COLUMN_T0])
 					koiDuration = float(lineItems[self.COLUMN_DURATION])/24
 					# We are only interested in KOIs with CONFIRMED of FALSE POSITIVE TCEs
 					if koiLabel in self.VALID_LABELS: 
-						destinationFile.write('Kepler, %s,%f,%f,%f,%d\n' % (koiId,koiT0,koiPeriod,koiDuration,self.toDummy(koiLabel)))
+						destinationFile.write('Kepler,%s,%s,%f,%f,%f,%d\n' % (koiId,koiName,koiT0,koiPeriod,koiDuration,self.toDummy(koiLabel)))
 	
 	def toDummy(self, label):
 		if label == self.LABEL_TRUE:
