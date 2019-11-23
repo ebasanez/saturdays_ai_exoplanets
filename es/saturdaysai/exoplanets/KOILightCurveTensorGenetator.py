@@ -13,9 +13,9 @@ class KOILightCurveTensorGenerator:
 	def __init__(self, source_file_name, destination_folder_path, global_tensor_len = DEFAULT_GLOBAL_LEN, local_tensor_len = DEFAULT_LOCAL_LEN, local_view_witdh = DEFAULT_LOCAL_VIEW_WIDTH, fold_mode = DEFAULT_FOLD_MODE):
 		self.df = pd.read_csv(source_file_name)
 		self.destination_folder_path = destination_folder_path
-		self.global_tensor_len = global_tensor_len
-		self.local_tensor_len = local_tensor_len
-		self.local_view_witdh = local_view_witdh
+		self.global_tensor_len = int(global_tensor_len)
+		self.local_tensor_len = int(local_tensor_len)
+		self.local_view_witdh = int(local_view_witdh)
 		self.fold_mode = fold_mode
 		
 	def getTensors(self, window):
@@ -35,7 +35,7 @@ class KOILightCurveTensorGenerator:
 			duration = row.koi_duration
 			period = row.koi_period
 			list_koi_tensors_x = lkClient.getKOILightKurve(koi_id,koi_t0, period, duration, self.global_tensor_len, self.local_tensor_len, self.local_view_witdh, mission = mission, fold_mode = self.fold_mode)
-			print(f"Obtained {len(list_koi_tensors_x)} tensors. Adding label")
+			print(f"Obtained {len(list_koi_tensors_x)} tensors.")
 			list_koi_tensors_y = [koi_label] * len(list_koi_tensors_x)
 			list_koi_tensors_z = [koi_name] * len(list_koi_tensors_x)
 			list_tensors_x = list_tensors_x + list_koi_tensors_x
@@ -44,11 +44,11 @@ class KOILightCurveTensorGenerator:
 		
 		return list_tensors_x, list_tensors_y, list_tensors_z
 	
-	def persist(self, x,y,z):
+	def persist(self, x, y, z, suffix):
 		path = Path(self.destination_folder_path)
-		np.save(path / f"X_{self.fold_mode}_{window_init:05d}_{window_end:05d}.npy", x)
-		np.save(path / f"Y_{self.fold_mode}_{window_init:05d}_{window_end:05d}.npy", y)
-		np.save(path / f"Z_{self.fold_mode}_{window_init:05d}_{window_end:05d}.npy", z)
+		np.save(path / f"X_{self.fold_mode}_{suffix}.npy", x)
+		np.save(path / f"Y_{self.fold_mode}_{suffix}.npy", y)
+		np.save(path / f"Z_{self.fold_mode}_{suffix}.npy", z)
 		
 # Execute only if script run standalone (not imported)	
 if __name__ == '__main__':
@@ -57,9 +57,9 @@ if __name__ == '__main__':
 	(script, source_file_name, destination_folder_path, window_init, window_end, fold_mode) = sys.argv
 	window_init = int(window_init)
 	window_end = int(window_end)
-	tensorGenerator = KOILightCurveTensorGenerator(source_file_name, destination_folder_path, fold_mode)
+	tensorGenerator = KOILightCurveTensorGenerator(source_file_name, destination_folder_path, fold_mode = fold_mode)
 	(x,y,z) = tensorGenerator.getTensors([int(window_init),int(window_end)])
-	tensorGenerator.persist(x,y,z)
+	tensorGenerator.persist(x,y,z,f"{window_init:05d}_{window_end:05d}")
 	
 	
 	

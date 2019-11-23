@@ -13,7 +13,8 @@ except:
 
 class LightKurveClient():
 	
-	def getKOILightKurve(self, koi_kic, t0, period, duration, global_bin_size , local_bin_size , local_view_size, quarter = None, mission = 'Kepler', fold_mode = 'split'):
+	def getKOILightKurve(self, koi_kic, t0, period, duration, global_bin_size , local_bin_size , local_view_size, 
+	quarter = None, mission = 'Kepler', fold_mode = 'split', normalize = True):
 		if quarter == None:
 			print(f"Obtaining all {mission} light curves for KOI {koi_kic}.")
 			lcs = search_lightcurvefile('KIC ' + str(koi_kic)).download_all(quality_bitmask='hardest').PDCSAP_FLUX
@@ -42,7 +43,8 @@ class LightKurveClient():
 		
 		lcs_bin_global = []
 		lcs_bin_local = []
-		print("Binning global and local views")
+		
+		print("Normalizing and binning global and local views")
 		for i in range(len(lcs_folded)):
 			try:
 				# Bin global view
@@ -51,10 +53,21 @@ class LightKurveClient():
 				# Bin local view
 				fold_local = lcs_local[i]
 				lc_bin_local = fold_local.bin(binsize = fold_local.flux.size / local_bin_size, method = 'median')	
+				
+				# Normalize using median
+				if normalize:
+					global_median = np.nanmedian(lc_bin_global.flux)
+					local_min = lc_bin_local.flux.min()
+					normalizeFunction = lambda f: (f - global_median) / (global_median - local_min)
+					lc_bin_global.flux = normalizeFunction(lc_bin_global.flux)
+					lc_bin_local.flux = normalizeFunction(lc_bin_local.flux)
+				
+				# Add folds to result
 				lcs_bin_local.append(lc_bin_local)
 				lcs_bin_global.append(lc_bin_global)
+				
 			except:
-				pass#print(f"DEATH&DESTRUCTION IN {i}! global lenght {len(fold_global)}, local length {len(fold_local)}")
+				print(f"DEATH&DESTRUCTION IN {i}! global lenght {len(lcs_folded[i])}, local length {len(lcs_local[i])}")
 		
 		# Create tensor with both global and local view
 		result = []
