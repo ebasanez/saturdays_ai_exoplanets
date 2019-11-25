@@ -128,15 +128,16 @@ class LightKurveClient():
                 with all the valid period lightcurves for the object
         
         """
-    
         if quarter == None:
+            koi_kic = str(koi_kic)
             print(f"Obtaining all {mission} light curves for KOI {koi_kic}.")
-            lcs = search_lightcurvefile('KIC ' + str(koi_kic)).download_all(quality_bitmask='hardest').PDCSAP_FLUX
-            lcc = LightCurveCollection([lc for lc in lcs if (lc.mission == mission) and (lc.targetid == koi_kic)])
+            download_dir = "D:\\PERSONAL\\IA Saturdays\\saturdays_ai_exoplanets\\tmp\\"+ koi_kic
+            lcs = search_lightcurvefile('KIC ' + koi_kic).download_all(quality_bitmask='hardest',download_dir=download_dir).PDCSAP_FLUX
+            lcc = LightCurveCollection([lc for lc in lcs if lc.mission == mission])
             lc_raw = lcc.stitch()
         else:
             print(f"Obtaining {mission} light curve for KOI {koi_kic} (quarter {quarter})")
-            lc_raw = search_lightcurvefile('KIC ' + str(koi_kic),quarter=quarter).download(quality_bitmask='hardest').PDCSAP_FLUX
+            lc_raw = search_lightcurvefile('KIC ' + koi_kic, quarter = quarter).download(quality_bitmask='hardest').PDCSAP_FLUX
         
         print("Cleaning and flattening light curve")
         lc_flat = lc_raw.flatten()        
@@ -252,17 +253,17 @@ class LightKurveClient():
 
 
 # Source of the features data
-source_file_name = Path("C:\\Users\\Miguel\\Google Drive\\self-learning\\ai_saturdays\\project\\saturdays_ai_exoplanets\\data\\KOIFeatures_2019.11.09_03.28.25.csv")
+source_file_name = Path("D:\\PERSONAL\\IA Saturdays\\saturdays_ai_exoplanets\\data\\KOIFeatures_2019.11.09_03.28.25.csv")
 
 # Folder where .npy lightcurve data will be stored
-destination_folder_path = Path("C:\\Users\\Miguel\\Google Drive\\self-learning\\ai_saturdays\\project\\saturdays_ai_exoplanets\\data\\lc_folded\\no_centroid")
+destination_folder_path = Path("D:\\PERSONAL\\IA Saturdays\\saturdays_ai_exoplanets\\data\\lc_folded\\no_centroid")
 
 
 
 # Inclusive window of lightcurves to download
-get_init = 0
-get_end = 7144
-window_size = 10
+get_init = 4000
+get_end = 4003
+window_size = 1
 """
 if window_init == 0 and window_end == -1:
     window = None
@@ -271,29 +272,23 @@ else:
     window = [window_init, window_end]
     window_suffix = f"{window_init:05d}_{window_end:05d}"
 """
-
 fold_mode = "fold"
-
 cont = True
 current = get_init
 while cont:
     window_init = current
     window_end  = min(current + window_size - 1, get_end)
     window_suffix = f"{window_init:05d}_{window_end:05d}"
-    
-    tensorGenerator = KOILightCurveTensorGenerator(source_file_name, 
-                                               destination_folder_path, 
-                                               fold_mode = fold_mode)
-
+    #try:
+    tensorGenerator = KOILightCurveTensorGenerator(source_file_name,
+												destination_folder_path,
+												fold_mode = fold_mode)
     window = [window_init, window_end]
     # Get the tensors
     (x, y, z) = tensorGenerator.getTensors(window)
-
     # Store the results
     tensorGenerator.persist(x, y, z, window_suffix)
-    
+    #except:
+    #    print(f"*** Retrieving window {window_suffix} failed.")
     current = window_end + 1
-    
     cont = window_end < get_end
-    
-    

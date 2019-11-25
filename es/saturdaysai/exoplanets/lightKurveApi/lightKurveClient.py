@@ -1,6 +1,7 @@
 #conda install --channel conda-forge lightkurve
 from math import floor
 from math import ceil
+from shutil import rmtree
 import numpy as np
 try:
     import lightkurve as lk
