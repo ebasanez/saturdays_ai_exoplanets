@@ -13,17 +13,24 @@ class KOIFeatureExtractor:
 	
 	LABEL_TRUE = 'CONFIRMED'
 	LABEL_FALSE = 'FALSE POSITIVE'
-	VALID_LABELS = [LABEL_TRUE, LABEL_FALSE]
+	TRAIN_LABELS = [LABEL_TRUE, LABEL_FALSE]
+	LABEL_CANDIDATE ='CANDIDATE'
 	
 	def __init__(self, sourceFileName):
 		self.sourceFileName = sourceFileName
  	
-	def extractFeatures(self, destinationFileName):
-		print("Extracting features in dataset ", self.sourceFileName, " to file ", destinationFileName)
-		self.deleteFile(destinationFileName) # Delete destination file to be able to recreate it
-		with open(destinationFileName,'a+') as destinationFile:
+	def extractTrainData(self, destinationFileName):
+		trainFileName = destinationFileName+"_train.csv"
+		unlabeledFileName = destinationFileName+"_test.csv"
+		
+		print(f"Extracting features in dataset {self.sourceFileName} to files {trainFileName} and {unlabeledFileName}")
+		 # Delete destination files to be able to recreate it
+		self.deleteFile(trainFileName)
+		self.deleteFile(unlabeledFileName) 
+		with open(trainFileName,'a+') as trainFile,open(unlabeledFileName,'a+') as unlabeledFile:
 			# Header row for generated file
-			destinationFile.write("mission,koi_id,koi_name,koi_time0bk,koi_period,koi_duration,koi_is_planet\n") 
+			trainFile.write("mission,koi_id,koi_name,koi_time0bk,koi_period,koi_duration,koi_is_planet\n") 
+			unlabeledFile.write("mission,koi_id,koi_name,koi_time0bk,koi_period,koi_duration\n") 
 			with open(self.sourceFileName,'r') as sourceFile:
 				# Skip header row
 				next(sourceFile) 
@@ -37,9 +44,11 @@ class KOIFeatureExtractor:
 					koiT0 = float(lineItems[self.COLUMN_T0])
 					koiDuration = float(lineItems[self.COLUMN_DURATION])/24
 					# We are only interested in KOIs with CONFIRMED of FALSE POSITIVE TCEs
-					if koiLabel in self.VALID_LABELS: 
-						destinationFile.write('Kepler,%s,%s,%f,%f,%f,%d\n' % (koiId,koiName,koiT0,koiPeriod,koiDuration,self.toDummy(koiLabel)))
-	
+					if koiLabel in self.TRAIN_LABELS: 
+						trainFile.write('Kepler,%s,%s,%f,%f,%f,%d\n' % (koiId,koiName,koiT0,koiPeriod,koiDuration,self.toDummy(koiLabel)))
+					if koiLabel == self.LABEL_CANDIDATE: 
+						unlabeledFile.write('Kepler,%s,%s,%f,%f,%f\n' % (koiId,koiName,koiT0,koiPeriod,koiDuration))
+					
 	def toDummy(self, label):
 		if label == self.LABEL_TRUE:
 			return 1
@@ -54,6 +63,6 @@ class KOIFeatureExtractor:
 		
 # Execute only if script run standalone (not imported)						
 if __name__ == '__main__':
-	(script, sourceFileName, destinationFileName) = sys.argv
+	(script, sourceFileName, trainFileName) = sys.argv
 	extractor = KOIFeatureExtractor(sourceFileName)
-	extractor.extractFeatures(destinationFileName)
+	extractor.extractTrainData(trainFileName)

@@ -38,8 +38,7 @@ class KOILightCurveTensorGenerator:
         self.local_view_witdh = int(local_view_witdh)
         self.fold_mode = fold_mode
         
-    def getTensors(self, window=None):
-        
+    def getTensors(self, window = None):
         if window == None:  # If no window is given, retrieve the whole dataset
             df = self.df
         else:
@@ -50,9 +49,11 @@ class KOILightCurveTensorGenerator:
         list_tensors_x = []
         list_tensors_y = []
         list_tensors_z = []
+        labeled = True if 'koi_is_planet' in df.columns else False
+        
         for index, row in df.iterrows():
             print(row)
-            koi_label = row.koi_is_planet
+            koi_label = row.koi_is_planet if labeled else 'n/a'
             mission = row.mission
             koi_id = row.koi_id
             koi_name = row.koi_name
@@ -245,24 +246,16 @@ class LightKurveClient():
         print(f"Nans in bins: {np.isnan(bin_values).sum()} out of {bin_values.shape}")
         return bin_values
             
-        
-        
-
-
-
-
-# Source of the features data
-source_file_name = Path("C:\\Users\\Miguel\\Google Drive\\self-learning\\ai_saturdays\\project\\saturdays_ai_exoplanets\\data\\KOIFeatures_2019.11.09_03.28.25.csv")
-
-# Folder where .npy lightcurve data will be stored
-destination_folder_path = Path("C:\\Users\\Miguel\\Google Drive\\self-learning\\ai_saturdays\\project\\saturdays_ai_exoplanets\\data\\lc_folded\\no_centroid")
+ 
 
 
 
 # Inclusive window of lightcurves to download
 get_init = 0
-get_end = 7144
-window_size = 10
+get_end = 1
+window_size = 1
+(script ,source_file_name, destination_folder_path) = sys.argv
+    
 """
 if window_init == 0 and window_end == -1:
     window = None
@@ -276,7 +269,7 @@ fold_mode = "fold"
 
 cont = True
 current = get_init
-while cont:
+while cont: 
     window_init = current
     window_end  = min(current + window_size - 1, get_end)
     window_suffix = f"{window_init:05d}_{window_end:05d}"
