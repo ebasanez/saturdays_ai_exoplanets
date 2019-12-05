@@ -4,3 +4,4 @@ y_fold_noCentroid.npy
 y_fold_noCentroid_noNans.npy
 z_fold_noCentroid.npy
 z_fold_noCentroid_noNans.npy
+/lc_folded
